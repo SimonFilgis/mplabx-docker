@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# currently tracked release
+export DIST="${DIST:-focal}"
+
+# docker image name
+IMAGE="mplab/build"
+# docker image tag
+VERSION="${VERSION:-latest}"
+
+# STDOUT is attached to TTY
+interactive="-it"
+
+read -d '' mplab_docker_command <<- EOF
+docker run
+  --rm
+  --name ${USER}_$(basename "${PWD}")_$$
+  --privileged
+  -e DISPLAY=unix$DISPLAY
+  -e LOCAL_UID=$(id -u ${USER})
+  -e LOCAL_GID=$(id -g ${USER})
+  -v "${PWD}:/workspace"
+  -v /etc/localtime:/etc/localtime:ro
+  -v /dev/bus/usb/:/dev/bus/usb
+  -v /tmp/.X11-unix:/tmp/.X11-unix
+  -e DIST
+  ${interactive}
+  ${IMAGE}:${VERSION}
+EOF
+
+eval $mplab_docker_command bash -l
